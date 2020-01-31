@@ -7,6 +7,7 @@ import pathlib
 from tqdm import tqdm
 
 
+
 def decode_dt(code: str) -> List:
     # capital letters are 65 - 90 inclusive
     # lower case are 97 - 122 inclusive
