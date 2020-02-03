@@ -91,7 +91,6 @@ def format_csv_to_txt_for_openmt(file_name):
 
 if __name__ == "__main__":
     for file in os.listdir("."):
-        print('ehllo')
         file = pathlib.Path(f"./{file}")
         if file.suffix == ".csv" and "str" in file.stem:
             format_csv_to_txt_for_openmt(file)
