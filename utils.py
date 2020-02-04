@@ -39,8 +39,8 @@ def polystr_to_polylist(polystr: str) -> List:
 
 def poly_to_str(poly: List) -> str:
     out_str = ""
-    for i, (coeff, exp) in enumerate(poly):
-        out_str += f" <coeff>{coeff} x^ <exp>{exp} "
+    for i, (exp, coeff) in enumerate(poly):
+        out_str += f" {coeff} x^ {exp} "
         if i != (len(poly) - 1):
             out_str += "+"
     return out_str
@@ -84,7 +84,7 @@ def format_csv_to_txt_for_openmt(file_name):
             f.write("\n")
     with open(f"./data/{file.stem}_dt.txt", "w") as f:
         for code in tqdm(df['dt_code']):
-            code = " <code>".join([char for char in code])
+            code = " ".join([char for char in code])
             f.write(code)
             f.write("\n")
 
@@ -126,8 +126,4 @@ if __name__ == "__main__":
         file = pathlib.Path(f"./{file}")
         if file.suffix == ".csv" and "str" in file.stem:
             format_csv_to_txt_for_openmt(file)
-
-    print("getting vocab")
-    get_vocab()
-
 
