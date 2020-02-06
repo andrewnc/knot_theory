@@ -7,6 +7,7 @@ import os
 import pathlib
 from tqdm import tqdm
 import pdb
+import subprocess
 
 
 def decode_dt(code: str) -> List:
@@ -117,13 +118,69 @@ def get_vocab():
             f.write(item)
             f.write("\n")
 
-if __name__ == "__main__":
-    print("adding column to csv")
-    put_str_repr_on_csv()
+def list_builder(li):
+    li_str = "{"
+    for i in li:
+        li_str += str(i) + ","
+    li_str = li_str[:-1] + "}"
+    return li_str
 
-    print("write text file")
-    for file in os.listdir("./"):
-        file = pathlib.Path(f"./{file}")
-        if file.suffix == ".csv" and "str" in file.stem:
-            format_csv_to_txt_for_openmt(file)
+def calculate_accuracy(ground_truth_dt: List[str], predicted_dt: List[str], sage_path="/home/andrew/Documents/SageMath/sage") -> int:
+    prediction_bools = []
+
+    for i, code in tqdm(enumerate(predicted_dt)):
+        gt_code = ground_truth_dt[i]
+        code1 = decode_dt(code.replace(" ", "").replace("\n", ""))
+        code2 = decode_dt(gt_code.replace(" ", "").replace("\n", ""))
+        if code1 != code2:
+            # result = subprocess.run(["bash", sage_path, "sage_accuracy.py", f"\"{code1}\"", f"\"{code2}\""], stdout=subprocess.PIPE).stdout
+            result = subprocess.run(["./wolf_accuracy.wls", f"\"{list_builder(code1)}\"", f"\"{list_builder(code2)}\""], stdout=subprocess.PIPE).stdout
+            result = result.decode("utf-8")
+            result = result.split("\n")[-2]
+            is_same_knot = eval(result)
+        else:
+            print("skip")
+            is_same_knot = True
+        prediction_bools.append(is_same_knot)
+        if i % 25 == 0:
+            print(f"\nNum True: {sum(prediction_bools)}\nNum False:{len(prediction_bools) - sum(prediction_bools)}\nTotal:{len(prediction_bools)}")
+
+    return sum(prediction_bools)/len(prediction_bools)
+
+def parallel_accuracy():
+    gt_list, pred_list = process_files("./data/KnotTableLarge_19a_str_dt.txt", "pred.txt")
+    n = len(pred_list)
+    gt_list = gt_list[:n]
+    data = [(gt_list[:n//8], pred_list[:n//8]),
+            (gt_list[1 * n//8:2 * n//8], pred_list[1 * n//8:2 * n//8]),
+            (gt_list[2 * n//8:3 * n//8], pred_list[2 * n//8:3 * n//8]),
+            (gt_list[3 * n//8:4 * n//8], pred_list[3 * n//8:4 * n//8]),
+            (gt_list[4 * n//8:5 * n//8], pred_list[4 * n//8:5 * n//8]),
+            (gt_list[5 * n//8:6 * n//8], pred_list[5 * n//8:6 * n//8]),
+            (gt_list[6 * n//8:7 * n//8], pred_list[6 * n//8:7 * n//8]),
+            (gt_list[7 * n//8:8 * n//8], pred_list[7 * n//8:8 * n//8])]
+
+
+def process_files(gt_dt_filename: str, pred_dt_filename: str):
+    with open(gt_dt_filename, "r") as f:
+        gt_list = f.readlines()
+
+    with open(pred_dt_filename, "r") as f:
+        pred_list = f.readlines()
+
+    return gt_list, pred_list
+
+
+
+if __name__ == "__main__":
+    # print("adding column to csv")
+    acc = calculate_accuracy(*process_files("./data/KnotTableLarge_19a_str_dt.txt", "pred.txt"))
+    print(acc)
+    # put_str_repr_on_csv()
+
+    # print("write text file")
+    # for file in os.listdir("./"):
+        # file = pathlib.Path(f"./{file}")
+        # if file.suffix == ".csv" and "str" in file.stem:
+            # format_csv_to_txt_for_openmt(file)
 
